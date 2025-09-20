@@ -1,11 +1,13 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { TransformDTO } from 'src/common/interceptors/transform-dto.interceptor';
 import { ResponseAuthDto } from './dto/response-auth.dto';
 
+
 @Controller('auth')
+
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -63,6 +65,13 @@ export class AuthController {
     }
   }
 
+  /*==============(get current user)==============*/
+  @Get('/profile')
+  getCurrentUser() {
+    return 'get a user profile';
+  }
 
 
+  
+  
 }
