@@ -3,6 +3,7 @@ import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UploadMediaDto } from './dto/upload-media.dto';
 
 @Controller('post')
 export class PostController {
@@ -31,6 +32,7 @@ export class PostController {
   return this.postService.findOne(+id);
   }
 
+
   // Update a post by ID
   @UseGuards(JwtAuthGuard)
   @Patch('updatebyId/:id')
@@ -40,6 +42,8 @@ export class PostController {
   const userId = req.user.id;
   return this.postService.update(+id, updatePostDto, userId);
   }
+
+  
 
   // Delete a post by ID
   @UseGuards(JwtAuthGuard)

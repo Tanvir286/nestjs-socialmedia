@@ -126,6 +126,13 @@ export class PostService {
     };
   }
 
+  /*==============(Upload media files)==============*/
+
+  async uploadMedia(uploadMediaDto: any, userId: number) {
+
+   
+  }
+
   /*==============(Delete a post by ID)==============*/
  
   async remove(id: number, userId: number) {
