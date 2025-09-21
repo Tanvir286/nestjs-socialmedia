@@ -4,6 +4,7 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { DeleteImageDto } from './dto/delete-image.dto';
+import { PaginationQueryDto } from 'src/common/pagination/pagination-query.dto';
 
 @Injectable()
 export class PostService {
@@ -59,25 +60,43 @@ export class PostService {
   }
 
   /*==============(Get all posts)==============*/
-  async findAll() { 
-    const posts = await this.prisma.post.findMany({ 
+  async findAll(paginationQuery: PaginationQueryDto) {
+
+    const limit = paginationQuery.limit ?? 10; 
+    const page = paginationQuery.page ?? 1;    
+
+    const skip = (page - 1) * limit;
+
+    const total = await this.prisma.post.count();
+
+    const posts = await this.prisma.post.findMany({
       include: {
-          author: true
-      }
+        author: true,
+      },
+      skip,
+      take: limit,
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
 
     return {
       message: 'Posts retrieved successfully',
-      data: posts.map(p => ({ 
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+      data: posts.map((p) => ({
         id: p.id,
         content: p.content,
         mediaUrls: p.mediaUrls,
         published: p.published,
         authorId: p.authorId,
-        authorName: p.author.name, 
+        authorName: p.author.name,
       })),
     };
-
   }
 
   /*==============(Get a single post by ID)==============*/

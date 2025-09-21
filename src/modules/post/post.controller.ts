@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, UseInterceptors, UploadedFiles } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, UseInterceptors, UploadedFiles, Query } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -6,6 +6,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UploadMediaDto } from './dto/upload-media.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { DeleteImageDto } from './dto/delete-image.dto';
+import { PaginationQueryDto } from 'src/common/pagination/pagination-query.dto';
 
 @Controller('post')
 export class PostController {
@@ -26,8 +27,10 @@ export class PostController {
 
   // Get all posts
   @Get('allpost')
-  findAll() {
-    return this.postService.findAll();
+  findAll(
+       @Query() paginationQuery: PaginationQueryDto
+  ) {
+  return this.postService.findAll(paginationQuery);
   }
 
   // Get a single post by ID
