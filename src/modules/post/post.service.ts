@@ -2,16 +2,23 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class PostService {
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   /*==============(Create a new post)==============*/
-  async create(createPostDto: CreatePostDto, userId: number) {
+  async create(createPostDto: CreatePostDto,
+               userId: number, 
+               files: Express.Multer.File[]) {
 
-    const { content, mediaUrls, published } = createPostDto;
+    // Remove mediaUrls from destructuring here
+    const { content, published } = createPostDto; 
 
     const existingUser = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -21,10 +28,17 @@ export class PostService {
       throw new NotFoundException('User not found');
     }
 
+    // upload files to Cloudinary if files are provided
+    let mediaUrls: string[] = []; // Declare it here with 'let'
+    if (files && files.length > 0) {
+      const uploadResults = await this.cloudinaryService.uploadMultipleFiles(files);
+      mediaUrls = uploadResults.map(result => result.secure_url);
+    }
+
     const post = await this.prisma.post.create({
       data: {
         content,
-        mediaUrls,
+        mediaUrls, // Use the new mediaUrls here
         published,
         authorId: userId,
       },
@@ -42,6 +56,7 @@ export class PostService {
       },
     };
   }
+
 
   /*==============(Get all posts)==============*/
   async findAll() { 
@@ -126,13 +141,6 @@ export class PostService {
     };
   }
 
-  /*==============(Upload media files)==============*/
-
-  async uploadMedia(uploadMediaDto: any, userId: number) {
-
-   
-  }
-
   /*==============(Delete a post by ID)==============*/
  
   async remove(id: number, userId: number) {
@@ -158,6 +166,7 @@ export class PostService {
     };
   }
 
+  
 
 }
    

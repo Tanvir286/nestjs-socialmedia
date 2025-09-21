@@ -26,10 +26,10 @@ enum Privacy {
 
 
 model Post {
-  id        Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   content   String
-  mediaUrls String?
-  published Privacy @default(PUBLIC)
+  mediaUrls String[] @default([])  // array of Cloudinary URLs
+  published Privacy  @default(PUBLIC)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

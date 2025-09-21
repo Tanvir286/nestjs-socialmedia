@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, UseInterceptors, UploadedFiles } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UploadMediaDto } from './dto/upload-media.dto';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('post')
 export class PostController {
@@ -13,11 +14,13 @@ export class PostController {
   // Create a new post 
   @UseGuards(JwtAuthGuard)
   @Post('create')
+  @UseInterceptors(FilesInterceptor('mediaUrls', 10)) // max 10 files
   create(@Body() createPostDto: CreatePostDto,
-         @Req() req: any
+         @Req() req: any,
+         @UploadedFiles() files: Express.Multer.File[]
         ) {
   const userId = req.user.id;
-  return this.postService.create(createPostDto, userId);
+  return this.postService.create(createPostDto, userId, files);
   }
 
   // Get all posts
@@ -44,7 +47,6 @@ export class PostController {
   }
 
   
-
   // Delete a post by ID
   @UseGuards(JwtAuthGuard)
   @Delete('deletebyId/:id')
@@ -54,6 +56,10 @@ export class PostController {
   console.log(userId);
   return this.postService.remove(+id, userId);
   }
+
+  
+  
+
 
 
 }
