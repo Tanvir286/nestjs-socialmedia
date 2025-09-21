@@ -3,6 +3,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { DeleteImageDto } from './dto/delete-image.dto';
 
 @Injectable()
 export class PostService {
@@ -29,7 +30,7 @@ export class PostService {
     }
 
     // upload files to Cloudinary if files are provided
-    let mediaUrls: string[] = []; // Declare it here with 'let'
+    let mediaUrls: string[] = [];
     if (files && files.length > 0) {
       const uploadResults = await this.cloudinaryService.uploadMultipleFiles(files);
       mediaUrls = uploadResults.map(result => result.secure_url);
@@ -38,7 +39,7 @@ export class PostService {
     const post = await this.prisma.post.create({
       data: {
         content,
-        mediaUrls, // Use the new mediaUrls here
+        mediaUrls, 
         published,
         authorId: userId,
       },
@@ -56,7 +57,6 @@ export class PostService {
       },
     };
   }
-
 
   /*==============(Get all posts)==============*/
   async findAll() { 
@@ -110,7 +110,12 @@ export class PostService {
   /*==============(Update a post by ID)==============*/
   async update(id: number, 
                updatePostDto: UpdatePostDto, 
-               userId: number) {
+               userId: number,
+               files: Express.Multer.File[]
+              ) {
+
+    console.log(files, "files");
+
 
     const post = await this.prisma.post.findFirst({
       where: { id, authorId: userId },
@@ -119,17 +124,74 @@ export class PostService {
        },
     });
 
-    if (!post) {
-      throw new NotFoundException('Post not found');
+    if (!post) throw new NotFoundException('Post not found');
+    
+
+    // Upload new files if provided
+    let newMediaUrls: string[] = [];
+
+    if (files && files.length > 0) {
+      const uploadResults = await this.cloudinaryService.uploadMultipleFiles(files);
+      console.log(uploadResults,"ji");
+      newMediaUrls = uploadResults.map(result => result.secure_url);
     }
+
+    // Merge existing mediaUrls with new ones
+    const updateData = { 
+      ...updatePostDto, 
+      mediaUrls: [...(post.mediaUrls || []), ...newMediaUrls] };
 
     const updatedPost = await this.prisma.post.update({
       where: { id },
-      data: updatePostDto,
+      data: updateData,
     });
 
     return {
       message: 'Post updated successfully',
+      data: {
+        id: updatedPost.id,
+        content: updatedPost.content,
+        mediaUrls: updatedPost.mediaUrls,
+        published: updatedPost.published,
+        authorId: updatedPost.authorId,
+        authorName: post.author.name,
+      },
+    };
+  }
+
+  /*==============(Delete an image from a post)==============*/
+  async deleteImage(id: number, 
+                    deleteImageDto: DeleteImageDto, 
+                    userId: number) {
+
+    let { imageUrl } = deleteImageDto;                
+
+    const post = await this.prisma.post.findFirst({
+      where: { id, authorId: userId },
+      include: {
+          author: true
+       },
+    });
+
+    if (!post) throw new NotFoundException('Post not found');
+
+     
+    if (!(post.mediaUrls).includes(imageUrl)) {
+      throw new NotFoundException('This image does not exist in the post');
+    }
+
+    // Remove the image from the mediaUrls array
+    const updatedMediaUrls = post.mediaUrls.filter(url => url !== imageUrl);
+
+    console.log(updatedMediaUrls);
+
+    const updatedPost = await this.prisma.post.update({
+      where: { id },
+      data: { mediaUrls: updatedMediaUrls },
+    });
+
+    return {
+      message: 'Image deleted successfully',
       data: {
         id: updatedPost.id,
         content: updatedPost.content,

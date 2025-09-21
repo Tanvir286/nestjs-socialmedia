@@ -5,6 +5,7 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UploadMediaDto } from './dto/upload-media.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { DeleteImageDto } from './dto/delete-image.dto';
 
 @Controller('post')
 export class PostController {
@@ -38,13 +39,27 @@ export class PostController {
 
   // Update a post by ID
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FilesInterceptor('mediaUrls', 10)) // max 10 files
   @Patch('updatebyId/:id')
   update(@Param('id') id: string, 
          @Body() updatePostDto: UpdatePostDto,
-         @Req() req: any) {
+         @Req() req: any,
+         @UploadedFiles() files: Express.Multer.File[]
+       ) {
   const userId = req.user.id;
-  return this.postService.update(+id, updatePostDto, userId);
+  return this.postService.update(+id, updatePostDto, userId, files);
   }
+
+
+  // delete-image route
+  @UseGuards(JwtAuthGuard)
+  @Patch('delete-image/:id')
+  async deleteImage(@Param('id') id: string,
+                   @Body() deleteImageDto: DeleteImageDto,
+                   @Req() req: any) {
+  const userId = req.user.id;
+  return this.postService.deleteImage(+id, deleteImageDto, userId);
+ }
 
   
   // Delete a post by ID
