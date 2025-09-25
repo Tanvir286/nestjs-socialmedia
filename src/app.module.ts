@@ -6,15 +6,15 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { PostModule } from './modules/post/post.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { PaginationModule } from './common/pagination';
 
 
 @Module({
-
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    
+    PaginationModule,
     PrismaModule,
     AuthModule,
     PostModule,

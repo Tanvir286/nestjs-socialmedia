@@ -14,4 +14,8 @@ export default () => ({
     expiry: process.env.JWT_EXPIRY,
   },
 
+  baseUrl:{
+    url: process.env.BASE_URL
+  }
+
 });

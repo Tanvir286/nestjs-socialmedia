@@ -5,11 +5,15 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { DeleteImageDto } from './dto/delete-image.dto';
 import { PaginationQueryDto } from 'src/common/pagination/pagination-query.dto';
+import appConfig from 'src/config/app.config';
+import { first } from 'rxjs';
+import { OffsetPaginationDto, PaginationService } from 'src/common/pagination';
 
 @Injectable()
 export class PostService {
 
   constructor(
+    private readonly paginationService: PaginationService,
     private readonly prisma: PrismaService,
     private readonly cloudinaryService: CloudinaryService,
   ) {}
@@ -60,43 +64,26 @@ export class PostService {
   }
 
   /*==============(Get all posts)==============*/
-  async findAll(paginationQuery: PaginationQueryDto) {
+  async findAll(paginationQuery: OffsetPaginationDto) {
 
-    const limit = paginationQuery.limit ?? 10; 
-    const page = paginationQuery.page ?? 1;    
+    const { page = 1, limit = 10 } = paginationQuery;
 
-    const skip = (page - 1) * limit;
-
-    const total = await this.prisma.post.count();
-
-    const posts = await this.prisma.post.findMany({
-      include: {
-        author: true,
-      },
-      skip,
-      take: limit,
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-
-    return {
-      message: 'Posts retrieved successfully',
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-      data: posts.map((p) => ({
+    return this.paginationService.paginateOffset(this.prisma, 'post', {
+      where: {}, 
+      include: { author: true },
+      page,
+      limit,
+      baseUrl: appConfig().baseUrl.url,
+      endpoint: '/allpost', // API route
+      mapData: (p) => ({
         id: p.id,
         content: p.content,
         mediaUrls: p.mediaUrls,
         published: p.published,
         authorId: p.authorId,
         authorName: p.author.name,
-      })),
-    };
+      }),
+    });
   }
 
   /*==============(Get a single post by ID)==============*/

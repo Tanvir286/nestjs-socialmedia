@@ -7,6 +7,7 @@ import { UploadMediaDto } from './dto/upload-media.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { DeleteImageDto } from './dto/delete-image.dto';
 import { PaginationQueryDto } from 'src/common/pagination/pagination-query.dto';
+import { OffsetPaginationDto } from 'src/common/pagination';
 
 @Controller('post')
 export class PostController {
@@ -28,7 +29,7 @@ export class PostController {
   // Get all posts
   @Get('allpost')
   findAll(
-       @Query() paginationQuery: PaginationQueryDto
+       @Query() paginationQuery: OffsetPaginationDto
   ) {
   return this.postService.findAll(paginationQuery);
   }
@@ -42,7 +43,7 @@ export class PostController {
 
   // Update a post by ID
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FilesInterceptor('mediaUrls', 10)) // max 10 files
+  @UseInterceptors(FilesInterceptor('mediaUrls', 10)) 
   @Patch('updatebyId/:id')
   update(@Param('id') id: string, 
          @Body() updatePostDto: UpdatePostDto,
