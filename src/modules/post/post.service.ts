@@ -74,7 +74,7 @@ export class PostService {
       page,
       limit,
       baseUrl: appConfig().baseUrl.url,
-      endpoint: '/allpost', // API route
+      endpoint: '/allpost', 
       mapData: (p) => ({
         id: p.id,
         content: p.content,

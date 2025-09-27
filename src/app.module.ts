@@ -7,6 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PostModule } from './modules/post/post.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { PaginationModule } from './common/pagination';
+import { FriendModule } from './modules/friend/friend.module';
 
 
 @Module({
@@ -18,7 +19,8 @@ import { PaginationModule } from './common/pagination';
     PrismaModule,
     AuthModule,
     PostModule,
-    CloudinaryModule],
+    CloudinaryModule,
+    FriendModule],
   controllers: [AppController],
   providers: [AppService],
 })

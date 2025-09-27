@@ -16,6 +16,11 @@ model User {
   updatedAt DateTime @updatedAt
 
   posts Post[]
+
+  sentFriendRequests     FriendRequest[] @relation("SentRequests")
+  receivedFriendRequests FriendRequest[] @relation("ReceivedRequests")
+  friends                Friendship[]    @relation("UserFriends")
+  friendOf               Friendship[]    @relation("FriendOfUser")
 }
 
 enum Privacy {
@@ -24,16 +29,47 @@ enum Privacy {
   PRIVATE
 }
 
-
 model Post {
   id        Int      @id @default(autoincrement())
   content   String
-  mediaUrls String[] @default([])  // array of Cloudinary URLs
+  mediaUrls String[] @default([])
   published Privacy  @default(PUBLIC)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  authorId Int
+  author   User @relation(fields: [authorId], references: [id])
+}
 
+model FriendRequest {
+  id        Int      @id @default(autoincrement())
+  status    RequestStatus @default(PENDING)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  authorId Int
-  author   User @relation(fields: [authorId], references: [id])
+  senderId Int
+  sender   User @relation("SentRequests", fields: [senderId], references: [id])
+
+  receiverId Int
+  receiver   User @relation("ReceivedRequests", fields: [receiverId], references: [id])
+
+  @@unique([senderId, receiverId])
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model Friendship {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  userId Int
+  user   User @relation("UserFriends", fields: [userId], references: [id])
+
+  friendId Int
+  friend   User @relation("FriendOfUser", fields: [friendId], references: [id])
+
+  @@unique([userId, friendId])
 }
