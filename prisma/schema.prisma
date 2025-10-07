@@ -21,6 +21,9 @@ model User {
   receivedFriendRequests FriendRequest[] @relation("ReceivedRequests")
   friends                Friendship[]    @relation("UserFriends")
   friendOf               Friendship[]    @relation("FriendOfUser")
+
+  messages Message[] 
+  conversations Conversation[] @relation("ConversationMembers")
 }
 
 enum Privacy {
@@ -73,3 +76,16 @@ model Friendship {
 
   @@unique([userId, friendId])
 }
+
+
+model Conversation {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  members   User[]    @relation("ConversationMembers", references: [id])
+  messages  Message[]
+}
+
+
+

@@ -8,6 +8,7 @@ import { PostModule } from './modules/post/post.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { PaginationModule } from './common/pagination';
 import { FriendModule } from './modules/friend/friend.module';
+import { ConversationModule } from './conversation/conversation.module';
 
 
 @Module({
@@ -20,7 +21,8 @@ import { FriendModule } from './modules/friend/friend.module';
     AuthModule,
     PostModule,
     CloudinaryModule,
-    FriendModule],
+    FriendModule,
+    ConversationModule],
   controllers: [AppController],
   providers: [AppService],
 })
