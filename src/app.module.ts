@@ -9,6 +9,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { PaginationModule } from './common/pagination';
 import { FriendModule } from './modules/friend/friend.module';
 import { ConversationModule } from './conversation/conversation.module';
+import { MessageModule } from './message/message.module';
 
 
 @Module({
@@ -22,7 +23,8 @@ import { ConversationModule } from './conversation/conversation.module';
     PostModule,
     CloudinaryModule,
     FriendModule,
-    ConversationModule],
+    ConversationModule,
+    MessageModule],
   controllers: [AppController],
   providers: [AppService],
 })
