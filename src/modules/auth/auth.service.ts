@@ -4,6 +4,7 @@ import { UpdateAuthDto } from './dto/update-auth.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
+import appConfig from 'src/config/app.config';
 
 const SALT_ROUNDS = 10;
 
@@ -43,7 +44,8 @@ export class AuthService {
       email: user.email 
     };
 
-    const accessToken = await this.jwtService.sign(payload);
+    //const accessToken = await this.jwtService.sign(payload);
+    const accessToken = this.jwtService.sign(payload, { expiresIn: appConfig().jwt.expiry });
     const refreshToken = await this.jwtService.sign(payload, { expiresIn: '7d' });
 
     return {

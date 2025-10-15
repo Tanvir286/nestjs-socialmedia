@@ -80,12 +80,27 @@ model Friendship {
 
 model Conversation {
   id        Int       @id @default(autoincrement())
+  
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  members   User[]    @relation("ConversationMembers", references: [id])
+  members User[] @relation("ConversationMembers")
   messages  Message[]
 }
 
+
+
+model Message {
+  id             Int           @id @default(autoincrement())
+  text           String
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  senderId       Int
+  sender         User          @relation(fields: [senderId], references: [id])
+
+  conversationId Int
+  conversation   Conversation  @relation(fields: [conversationId], references: [id])
+}
 
 
