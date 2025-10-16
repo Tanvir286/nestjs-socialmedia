@@ -125,4 +125,8 @@ export class MessageService {
       },
     };
   }
+
+  // get all conversation list
+ 
+
 }
