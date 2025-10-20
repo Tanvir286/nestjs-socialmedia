@@ -22,6 +22,11 @@ model User {
   friends                Friendship[]    @relation("UserFriends")
   friendOf               Friendship[]    @relation("FriendOfUser")
 
+  //reciver
+  sent_notifications     Notification[] @relation("sender")
+  received_notifications Notification[] @relation("receiver")
+  //sender
+
   messages Message[] 
   conversations Participant[]  
 }
@@ -131,4 +136,41 @@ model Message {
   conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 }
 
+
+
+model NotificationEvent {
+  id         String   @id @default(uuid())
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt 
+  deleted_at DateTime?
+
+  status Int?    @default(1) @db.SmallInt
+  type   String? 
+  text   String?
+
+  notifications Notification[]
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt 
+  deleted_at DateTime?
+
+  read_at DateTime?
+
+  status Int? @default(1) @db.SmallInt
+
+
+  sender_id   Int?
+  sender      User?    @relation("sender", fields: [sender_id], references: [id])
+
+  receiver_id Int?
+  receiver    User?    @relation("receiver", fields: [receiver_id], references: [id])
+
+  notification_event_id String?
+  notification_event    NotificationEvent? @relation(fields: [notification_event_id], references: [id])
+
+  entity_id String?
+}
 

@@ -4,6 +4,7 @@ import { UpdateMessageDto } from './dto/update-message.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { create } from 'domain';
 import { MessageGateway } from './message.gateway';
+import { NotificationRepository } from 'src/common/repository/notification/notification.repository';
 
 @Injectable()
 export class MessageService {
@@ -64,6 +65,33 @@ export class MessageService {
 
     this.messageGateway.handleNewMessage(newMessage);   
 
+    // notification logic
+
+    const participants = await this.prisma.participant.findMany({
+      where: {
+        conversationId: conversationId,
+        NOT: { userId: senderId }, 
+      },
+      select: { userId: true },
+    });
+
+
+    if (participants.length > 0) {
+  
+    for (const participant of participants) {
+      const notificationPayload = {
+        sender_id: senderId,
+        receiver_id: participant.userId, 
+        text: `New message from ${newMessage.sender.name}`,
+        type: 'NEW_MESSAGE' as const,
+        entity_id: conversationId.toString(),
+    };
+    
+    const newNotification = await NotificationRepository.createNotification(notificationPayload);
+    
+    this.messageGateway.sendNotificationToUser(participant.userId, newNotification);
+  }
+
     return {    
       success: true,
       message: "Message sent successfully.",
@@ -76,6 +104,7 @@ export class MessageService {
     }
   }
 
+  }
   // Update a message
   async updateMessage(
     messageId: number,

@@ -10,6 +10,7 @@ import { PaginationModule } from './common/pagination';
 import { FriendModule } from './modules/friend/friend.module';
 import { ConversationModule } from './conversation/conversation.module';
 import { MessageModule } from './message/message.module';
+import { NotificationModule } from './notification/notification.module';
 
 
 @Module({
@@ -24,7 +25,8 @@ import { MessageModule } from './message/message.module';
     CloudinaryModule,
     FriendModule,
     ConversationModule,
-    MessageModule],
+    MessageModule,
+    NotificationModule],
   controllers: [AppController],
   providers: [AppService],
 })

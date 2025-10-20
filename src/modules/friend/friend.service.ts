@@ -4,6 +4,8 @@ import { CreateFriendRequestDto } from './dto/friend-request.dto';
 import { UpdateFriendRequestDto } from './dto/update-friend-request.dto';
 import { RequestStatus } from '@prisma/client';
 import { count } from 'console';
+import { MessageGateway } from 'src/message/message.gateway';
+import { NotificationRepository } from 'src/common/repository/notification/notification.repository';
 
 
 @Injectable()
@@ -11,6 +13,7 @@ export class FriendService {
   
     constructor(
      private readonly prisma: PrismaService,
+     private readonly messageGateway: MessageGateway,
     ) {}
 
     // Send a friend request
@@ -75,6 +78,18 @@ export class FriendService {
                 receiver: { select: { id: true, name: true, email: true } },
             }
         });
+
+        const notificationPaylod = {
+            sender_id: userId,
+            receiver_id: receiverId,
+            text: `${friendRequest.sender.name} has sent you a friend request.`,
+            type: 'FRIEND_REQUEST' as const,
+            entity_id: friendRequest.id.toString(),
+        }
+
+        await NotificationRepository.createNotification(notificationPaylod);
+
+        this.messageGateway.sendNotificationToUser(receiverId, notificationPaylod);
 
         return {
             success: true,

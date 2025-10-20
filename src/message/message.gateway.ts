@@ -75,5 +75,28 @@ export class MessageGateway implements OnGatewayConnection, OnGatewayDisconnect 
     this.server.to(roomName).emit('deletedMessage', payload)
   }
 
+  // Register user to receive notifications
+  @SubscribeMessage('register')
+  async handleRegister(
+    @MessageBody() userId: number, 
+    @ConnectedSocket() client: Socket,
+  ) {
+    if (!userId) return;
+    const roomName = `user-${userId}`; 
+    await client.join(roomName);
+    console.log(`Client ${client.id} registered for user: ${userId} in room: ${roomName}`);
+  }
+
+  // Send notification to a specific user
+  sendNotificationToUser(userId: number, notification: any) {
+    const roomName = `user-${userId}`;
+    this.server.to(roomName).emit('notification', notification);
+  }
+
+
+
+
+
+
 
 }
