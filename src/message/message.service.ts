@@ -3,23 +3,25 @@ import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { create } from 'domain';
+import { MessageGateway } from './message.gateway';
 
 @Injectable()
 export class MessageService {
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService,
+              private readonly messageGateway: MessageGateway
+  ) {}
 
+  // Send a message in a conversation
   async sendMessage(createMessageDto: CreateMessageDto, senderId: number) {
 
     const { conversationId, text } = createMessageDto;
 
-    // 
     if(!text.trim()) {
       throw new ConflictException("Message text cannot be empty");
     }
 
-
-     // ১. conversation টি বিদ্যমান কিনা তা যাচাই করা
+    // ১. conversation টি বিদ্যমান কিনা তা যাচাই করা
     const conversation = await this.prisma.conversation.findUnique({
       where: { id: conversationId },
     });
@@ -41,7 +43,6 @@ export class MessageService {
       );
     }
 
-
     // ৩. মেসেজ তৈরি এবং সংরক্ষণ করা
     const newMessage = await this.prisma.message.create({
       data: {
@@ -61,6 +62,8 @@ export class MessageService {
       },
     });
 
+    this.messageGateway.handleNewMessage(newMessage);   
+
     return {    
       success: true,
       message: "Message sent successfully.",
@@ -71,6 +74,90 @@ export class MessageService {
         conversationId: newMessage.conversationId,
       },
     }
+  }
+
+  // Update a message
+  async updateMessage(
+    messageId: number,
+    updateMessageDto: UpdateMessageDto,
+    userId: number,
+  ) {
+    const { text } = updateMessageDto;
+
+    // ১. প্রথমে মেসেজটি খুঁজে বের করা
+    const message = await this.prisma.message.findUnique({
+      where: { id: messageId },
+    });
+
+    if (!message) {
+      throw new NotFoundException('Message not found.');
+    }
+
+    // ২. ব্যবহারকারী মেসেজের মালিক কিনা তা যাচাই করা
+    if (message.senderId !== userId) {
+      throw new ForbiddenException(
+        'You are not allowed to update this message.',
+      );
+    }
+
+    // ৩. মেসেজটি আপডেট করা
+    const updatedMessage = await this.prisma.message.update({
+      where: { id: messageId },
+      data: { text },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        conversation: {
+          select: {
+            id: true
+          },
+        },
+      },
+    });
+    
+    console.log("Updated Message:", updatedMessage);
+    this.messageGateway.handleNewMessage(updatedMessage);
+
+    return {
+      success: true,
+      message: 'Message updated successfully.',
+      data: updatedMessage,
+    };
+  }
+
+  // Delete a message
+  async deleteMessage(messageId: number, userId: number) {
+    // ১. প্রথমে মেসেজটি খুঁজে বের করা
+    const message = await this.prisma.message.findUnique({
+      where: { id: messageId },
+      select: { senderId: true, conversationId: true },
+    });
+
+    if (!message) {
+      throw new NotFoundException('Message not found.');
+    }
+
+    // ২. ব্যবহারকারী মেসেজের মালিক কিনা তা যাচাই করা
+    if (message.senderId !== userId) {
+      throw new ForbiddenException(
+        'You are not allowed to delete this message.',
+      );
+    }
+
+    this.messageGateway.handleDeletedMessage(message);
+
+    // ৩. মেসেজটি মুছে ফেলা
+    await this.prisma.message.delete({
+      where: { id: messageId },
+    });
+    return {
+      success: true,
+      message: 'Message deleted successfully.',
+    };
   }
 
   // get all messages in a conversation

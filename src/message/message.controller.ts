@@ -18,6 +18,34 @@ export class MessageController {
     return this.messageService.sendMessage(createMessageDto, senderId);
   }
 
+
+  // Update a message
+  @Patch('updateMessage/:messageId')
+  updateMessage(
+    @Param('messageId') messageId: string,
+    @Body() updateMessageDto: UpdateMessageDto,
+    @Req() req: any,
+  ) {
+    const userId = req.user.id;
+    return this.messageService.updateMessage(
+      +messageId,
+      updateMessageDto,
+      userId,
+    );
+  }
+
+
+  // Delete a message
+  @Delete('deleteMessage/:messageId')
+  deleteMessage(
+    @Param('messageId') messageId: string,
+    @Req() req: any,
+  ) {
+    const userId = req.user.id;
+    return this.messageService.deleteMessage(+messageId, userId);
+  }
+ 
+
   // get all messages in a conversation
   @Get(':conversationId/messages')
   getMessages(@Param('conversationId') conversationId: string,
